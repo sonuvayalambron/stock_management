@@ -16,9 +16,6 @@ class InsufficientStockException extends Exception
         parent::__construct($message, 422);
     }
 
-    /**
-     * Render the exception as an HTTP response
-     */
     public function render(): JsonResponse
     {
         return response()->json([

@@ -1,59 +1,263 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Stock Movement Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A robust, backend-driven inventory module built with Laravel. This system safely handles stock movements (sales, purchases, returns) using strict database transactions, pessimistic row locking (`lockForUpdate`), and concurrency protections to ensure inventory consistency.
 
-## About Laravel
+## Core Features
+* **Transaction Safety**: All stock movements and balance updates occur within atomic DB transactions.
+* **Concurrency Handling**: Row-level locking prevents race conditions during high-volume API requests.
+* **Consistency Rules**: Stock is actively prevented from dropping below zero.
+* **Standardized API**: Utilizes Laravel API Resources and custom Exception rendering for consistent JSON responses.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Setup Instructions
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Clone the repository and install dependencies:
+   ```bash
+   composer install
+   ```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. Copy the environment file and generate the app key:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-## Learning Laravel
+3. **Environment Configuration:** 
+   Open your `.env` file and configure your database connection. For a local MySQL setup, it should look like this:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=meridian_stock
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+4. Run migrations and seed the database with initial products and users:
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. Start the local development server:
+   ```bash
+   php artisan serve
+   ```
 
-## Laravel Sponsors
+## Test Credentials
+The database seeder provisions two users for testing:
+* Admin: `admin@gmail.com` / `Admin@123`
+* User: `user@gmail.com` / `User@123`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🚀 API TESTING GUIDE
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Below is the complete testing workflow.
 
-## Contributing
+⚠️ **IMPORTANT:** 
+Run **TEST 1** first, copy the `token` from the response, and replace `YOUR_TOKEN` with it in the headers for all subsequent tests!
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### TEST 1 - Login
 
-## Code of Conduct
+```text
+METHOD : POST
+URL    : http://localhost:8000/api/auth/login
+HEADERS: Content-Type: application/json
+BODY   :
+{
+  "email": "admin@gmail.com",
+  "password": "Admin@123"
+}
+```
+✅ **EXPECTED STATUS:** 200  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "Admin User",
+      "email": "admin@gmail.com"
+    },
+    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+}
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### TEST 2 - Get Current User
 
-## Security Vulnerabilities
+```text
+METHOD : GET
+URL    : http://localhost:8000/api/auth/me
+HEADERS: Authorization: Bearer YOUR_TOKEN
+BODY   : none
+```
+✅ **EXPECTED STATUS:** 200  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Admin User",
+    "email": "admin@gmail.com",
+    "created_at": "2024-01-15T10:00:00.000000Z",
+    "updated_at": "2024-01-15T10:00:00.000000Z"
+  }
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### TEST 3 - Create a Product
 
-## License
+```text
+METHOD : POST
+URL    : http://localhost:8000/api/products
+HEADERS: Authorization: Bearer YOUR_TOKEN
+         Content-Type: application/json
+BODY   :
+{
+  "name": "Sony PlayStation 5",
+  "sku": "CONSOLE-SONY-PS5",
+  "is_active": true
+}
+```
+✅ **EXPECTED STATUS:** 201  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "message": "Product created successfully",
+  "data": {
+    "id": 1,
+    "name": "Sony PlayStation 5",
+    "sku": "CONSOLE-SONY-PS5",
+    "is_active": true,
+    "current_stock": 0,
+    "created_at": "2024-01-15T10:00:00"
+  }
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### TEST 4 - Create a Stock Movement (Purchase)
+
+```text
+METHOD : POST
+URL    : http://localhost:8000/api/stock-movements
+HEADERS: Authorization: Bearer YOUR_TOKEN
+         Content-Type: application/json
+BODY   :
+{
+  "product_id": 1,
+  "movement_type": "purchase",
+  "quantity": 50,
+  "reference_number": "PUR-1001",
+  "notes": "Initial inventory arrival"
+}
+```
+✅ **EXPECTED STATUS:** 201  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "message": "Stock movement created successfully",
+  "data": {
+    "id": 1,
+    "movement_type": "purchase",
+    "quantity": 50,
+    "reference_number": "PUR-1001",
+    "notes": "Initial inventory arrival",
+    "product": {
+      "id": 1,
+      "name": "Sony PlayStation 5",
+      "sku": "CONSOLE-SONY-PS5"
+    },
+    "created_by": "Admin User",
+    "created_at": "2024-01-15T10:05:00"
+  }
+}
+```
+
+### TEST 5 - Check Stock Balance for a Product
+
+```text
+METHOD : GET
+URL    : http://localhost:8000/api/products/1/stock
+HEADERS: Authorization: Bearer YOUR_TOKEN
+BODY   : none
+```
+✅ **EXPECTED STATUS:** 200  
+✅ **CHECK:** current_stock must be 50  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "data": {
+    "product_id": 1,
+    "product_name": "Sony PlayStation 5",
+    "sku": "CONSOLE-SONY-PS5",
+    "is_active": true,
+    "current_stock": 50,
+    "last_movement_at": "2024-01-15T10:05:00.000000Z"
+  }
+}
+```
+
+### TEST 6 - Get All Movements for a Specific Product
+
+```text
+METHOD : GET
+URL    : http://localhost:8000/api/products/1/stock-movements
+HEADERS: Authorization: Bearer YOUR_TOKEN
+BODY   : none
+```
+✅ **EXPECTED STATUS:** 200  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "movement_type": "purchase",
+      "quantity": 50,
+      "reference_number": "PUR-1001",
+      "notes": "Initial inventory arrival",
+      "created_by": "Admin User",
+      "created_at": "2024-01-15T10:05:00"
+    }
+  ]
+}
+```
+
+### TEST 7 - Get All Stock Movements (Global with Filter)
+
+```text
+METHOD : GET
+URL    : http://localhost:8000/api/stock-movements?movement_type=purchase
+HEADERS: Authorization: Bearer YOUR_TOKEN
+BODY   : none
+```
+✅ **EXPECTED STATUS:** 200  
+✅ **EXPECTED RESPONSE:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "movement_type": "purchase",
+      "quantity": 50,
+      "reference_number": "PUR-1001",
+      "notes": "Initial inventory arrival",
+      "product": {
+        "id": 1,
+        "name": "Sony PlayStation 5",
+        "sku": "CONSOLE-SONY-PS5"
+      },
+      "created_by": "Admin User",
+      "created_at": "2024-01-15T10:05:00"
+    }
+  ]
+}
+```

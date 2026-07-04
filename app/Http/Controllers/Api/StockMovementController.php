@@ -7,6 +7,8 @@ use App\Http\Requests\StoreStockMovementRequest;
 use App\Services\StockMovementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Resources\StockMovementResource;
+use App\Http\Resources\ProductResource;
 
 class StockMovementController extends Controller
 {
@@ -14,9 +16,7 @@ class StockMovementController extends Controller
         private StockMovementService $stockMovementService
     ) {}
 
-    /**
-     * Create a new stock movement
-     */
+    //create new stock movement
     public function store(StoreStockMovementRequest $request): JsonResponse
     {
         $movement = $this->stockMovementService->createMovement(
@@ -26,13 +26,11 @@ class StockMovementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Stock movement created successfully',
-            'data' => $movement,
+            'data' => new StockMovementResource($movement),
         ], 201);
     }
 
-    /**
-     * Get all stock movements (with optional filters)
-     */
+    //get all stock movements
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['movement_type', 'product_id']);
@@ -42,7 +40,7 @@ class StockMovementController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $movements,
+            'data' => StockMovementResource::collection($movements)->response()->getData(true),
         ]);
     }
 }

@@ -30,10 +30,7 @@ class Product extends Model
     {
         return $this->hasOne(StockBalance::class);
     }
-
-    /**
-     * Get current stock quantity
-     */
+ 
     public function getCurrentStock(): int
     {
         return $this->stockBalance?->quantity ?? 0;

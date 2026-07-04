@@ -11,9 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Register a new user
-     */
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -40,9 +37,6 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /**
-     * Login user and create token
-     */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -50,7 +44,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::query()->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -58,7 +52,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // Revoke old tokens
         $user->tokens()->delete();
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -73,22 +66,18 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Logout user (revoke token)
-     */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        /** @var \Laravel\Sanctum\PersonalAccessToken $token */
+        $token = $request->user()->currentAccessToken();
+        $token->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully',
         ]);
     }
-
-    /**
-     * Get authenticated user
-     */
+    
     public function me(Request $request): JsonResponse
     {
         return response()->json([

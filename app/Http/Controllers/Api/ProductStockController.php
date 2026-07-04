@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\StockMovementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Resources\StockMovementResource;
+use App\Http\Resources\ProductResource;
 
 class ProductStockController extends Controller
 {
@@ -13,9 +15,7 @@ class ProductStockController extends Controller
         private StockMovementService $stockMovementService
     ) {}
 
-    /**
-     * Get current stock for a product
-     */
+    //current stock
     public function show(int $productId): JsonResponse
     {
         $stock = $this->stockMovementService->getProductStock($productId);
@@ -26,17 +26,16 @@ class ProductStockController extends Controller
         ]);
     }
 
-    /**
-     * Get all stock movements for a product
-     */
+    //all movements of product
     public function movements(int $productId, Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 15);
+
         $movements = $this->stockMovementService->getProductMovements($productId, $perPage);
 
         return response()->json([
             'success' => true,
-            'data' => $movements,
+            'data' => StockMovementResource::collection($movements)->response()->getData(true),
         ]);
     }
 }

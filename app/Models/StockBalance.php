@@ -21,9 +21,6 @@ class StockBalance extends Model
         'last_movement_at' => 'datetime',
     ];
 
-    /**
-     * Get the product this balance belongs to
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

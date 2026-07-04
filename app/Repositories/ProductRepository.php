@@ -8,17 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class ProductRepository
 {
-    /**
-     * Find product by ID or fail
-     */
+
     public function findOrFail(int $id): Product
     {
         return Product::with('stockBalance')->findOrFail($id);
     }
 
-    /**
-     * Get or create stock balance with row lock
-     */
     public function getStockBalanceWithLock(int $productId): StockBalance
     {
         return StockBalance::lockForUpdate()
@@ -28,9 +23,7 @@ class ProductRepository
             );
     }
 
-    /**
-     * Update stock balance
-     */
+   
     public function updateStockBalance(int $productId, int $quantityChange): void
     {
         StockBalance::query()->where('product_id', $productId)
@@ -41,9 +34,7 @@ class ProductRepository
             ]);
     }
 
-    /**
-     * Get all active products
-     */
+    
     public function getAllActive()
     {
         return Product::query()->where('is_active', true)
